@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spjallbot.is – AI spjallbot fyrir íslenskar vefsíður</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0c10; --bg2: #111318; --bg3: #181b22; --card: #1c1f28;
+    --accent: #4fffb0; --accent2: #00c9ff; --text: #f0f2f5; --muted: #7a8095;
+    --border: rgba(255,255,255,0.07); --radius: 16px;
+    --font-display: 'Syne', sans-serif; --font-body: 'DM Sans', sans-serif;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 16px; line-height: 1.7; min-height: 100vh; overflow-x: hidden; }
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1.1rem 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(10,12,16,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  nav a.nav-cta { background: var(--accent); color: #0a0c10; font-family: var(--font-body); font-weight: 500; font-size: 0.9rem; padding: 0.5rem 1.2rem; border-radius: 50px; text-decoration: none; transition: opacity 0.2s; }
+  nav a.nav-cta:hover { opacity: 0.85; }
+  .hero { padding: 9rem 2rem 5rem; max-width: 860px; margin: 0 auto; text-align: center; }
+  .badge { display: inline-block; font-size: 0.78rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.35rem 1rem; border-radius: 50px; background: rgba(79,255,176,0.1); color: var(--accent); border: 1px solid rgba(79,255,176,0.25); margin-bottom: 1.8rem; }
+  h1 { font-family: var(--font-display); font-size: clamp(2.4rem, 6vw, 4.2rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 1.4rem; }
+  h1 em { font-style: normal; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero-sub { font-size: 1.15rem; color: var(--muted); max-width: 560px; margin: 0 auto 2.5rem; font-weight: 300; }
+  .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-primary { background: var(--accent); color: #0a0c10; font-family: var(--font-body); font-weight: 500; font-size: 1rem; padding: 0.85rem 2rem; border-radius: 50px; text-decoration: none; transition: transform 0.2s, opacity 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; }
+  .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
+  .btn-ghost { background: transparent; color: var(--text); font-family: var(--font-body); font-weight: 400; font-size: 1rem; padding: 0.85rem 2rem; border-radius: 50px; border: 1px solid var(--border); text-decoration: none; transition: border-color 0.2s, background 0.2s; }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.04); }
+  .chat-demo { max-width: 480px; margin: 4rem auto 2rem; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+  .chat-header { background: var(--bg3); padding: 0.9rem 1.2rem; display: flex; align-items: center; gap: 0.7rem; border-bottom: 1px solid var(--border); }
+  .chat-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .chat-title { font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; color: var(--text); }
+  .chat-status { font-size: 0.72rem; color: var(--accent); margin-left: auto; }
+  .chat-body { padding: 1.2rem; display: flex; flex-direction: column; gap: 0.9rem; }
+  .msg { max-width: 82%; padding: 0.7rem 1rem; border-radius: 14px; font-size: 0.88rem; line-height: 1.5; }
+  .msg-user { background: rgba(79,255,176,0.1); border: 1px solid rgba(79,255,176,0.15); color: #c8ffe8; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .msg-bot { background: var(--bg3); border: 1px solid var(--border); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .msg-bot .sender { font-size: 0.7rem; color: var(--accent); font-weight: 500; margin-bottom: 0.25rem; display: block; }
+  .typing { display: flex; gap: 4px; align-items: center; padding: 0.7rem 1rem; background: var(--bg3); border: 1px solid var(--border); border-radius: 14px; border-bottom-left-radius: 4px; width: 60px; align-self: flex-start; }
+  .typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+  .stats-row { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; padding: 3rem 2rem; max-width: 700px; margin: 0 auto; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .stat { text-align: center; }
+  .stat-num { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; display: block; }
+  .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+  section { padding: 5rem 2rem; max-width: 1040px; margin: 0 auto; }
+  .section-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; display: block; }
+  h2 { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 1rem; }
+  .section-intro { color: var(--muted); font-size: 1.05rem; max-width: 520px; margin-bottom: 3rem; font-weight: 300; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
+  .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.8rem; transition: border-color 0.25s, transform 0.25s; }
+  .feature-card:hover { border-color: rgba(79,255,176,0.2); transform: translateY(-3px); }
+  .feature-icon { width: 42px; height: 42px; border-radius: 10px; background: rgba(79,255,176,0.08); border: 1px solid rgba(79,255,176,0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 1.1rem; }
+  .feature-card h3 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.6rem; letter-spacing: -0.02em; }
+  .feature-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; font-weight: 300; }
+  .pricing-wrapper { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+  .price-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.4rem 2rem; min-width: 300px; max-width: 340px; flex: 1; position: relative; }
+  .price-card.featured { border-color: rgba(79,255,176,0.35); background: linear-gradient(160deg, rgba(79,255,176,0.05), var(--card)); }
+  .price-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #0a0c10; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.3rem 1rem; border-radius: 50px; white-space: nowrap; }
+  .price-name { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--muted); margin-bottom: 1.2rem; }
+  .price-main { display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.3rem; }
+  .price-old { text-decoration: line-through; color: var(--muted); font-size: 1rem; }
+  .price-new { font-family: var(--font-display); font-size: 2.6rem; font-weight: 800; letter-spacing: -0.04em; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .price-period { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.8rem; }
+  .price-features { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
+  .price-features li { font-size: 0.9rem; color: #c0c5d5; display: flex; align-items: center; gap: 0.6rem; font-weight: 300; }
+  .check { width: 18px; height: 18px; border-radius: 50%; background: rgba(79,255,176,0.12); border: 1px solid rgba(79,255,176,0.3); color: var(--accent); font-size: 0.65rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .cta-section { padding: 6rem 2rem; text-align: center; position: relative; overflow: hidden; }
+  .cta-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 300px; background: radial-gradient(ellipse, rgba(79,255,176,0.06) 0%, transparent 70%); pointer-events: none; }
+  .cta-section h2 { margin-bottom: 1rem; }
+  .cta-section p { color: var(--muted); font-size: 1.05rem; max-width: 480px; margin: 0 auto 2.5rem; font-weight: 300; }
+  .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-primary-lg { background: var(--accent); color: #0a0c10; font-family: var(--font-body); font-weight: 500; font-size: 1.05rem; padding: 1rem 2.4rem; border-radius: 50px; text-decoration: none; transition: transform 0.2s, opacity 0.2s; display: inline-block; }
+  .btn-primary-lg:hover { transform: translateY(-2px); opacity: 0.9; }
+  .trust-row { margin-top: 2.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+  .trust-item { font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+  .trust-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--muted); font-size: 0.82rem; }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+  body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; }
+  nav, main, footer { position: relative; z-index: 1; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  #spjallbot-bubble {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #4fffb0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(79,255,176,0.4);
+    z-index: 9999;
+    transition: transform 0.2s;
+  }
+
+  #spjallbot-bubble:hover { transform: scale(1.08); }
+
+  #spjallbot-bubble svg { width: 28px; height: 28px; }
+
+  #spjallbot-window {
+    position: fixed;
+    bottom: 96px;
+    right: 24px;
+    width: 360px;
+    height: 520px;
+    background: #0a0c10;
+    border-radius: 16px;
+    border: 1px solid rgba(79,255,176,0.2);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 9998;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    font-family: 'DM Sans', Arial, sans-serif;
+  }
+
+  #spjallbot-window.open { display: flex; }
+
+  .sb-header {
+    background: #111318;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .sb-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #4fffb0;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .sb-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #f0f2f5;
+    flex: 1;
+  }
+
+  .sb-close {
+    cursor: pointer;
+    color: #7a8095;
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .sb-close:hover { color: #f0f2f5; }
+
+  .sb-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sb-messages::-webkit-scrollbar { width: 4px; }
+  .sb-messages::-webkit-scrollbar-track { background: transparent; }
+  .sb-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .sb-msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .sb-msg-bot {
+    background: #1c1f28;
+    border: 1px solid rgba(255,255,255,0.07);
+    color: #f0f2f5;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+
+  .sb-msg-user {
+    background: rgba(79,255,176,0.12);
+    border: 1px solid rgba(79,255,176,0.2);
+    color: #c8ffe8;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+
+  .sb-typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 10px 14px;
+    background: #1c1f28;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    border-bottom-left-radius: 4px;
+    width: 52px;
+    align-self: flex-start;
+  }
+
+  .sb-typing span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #7a8095;
+    animation: bounce 1.2s infinite;
+  }
+
+  .sb-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .sb-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+
+  .sb-input-area {
+    padding: 12px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    gap: 8px;
+    background: #111318;
+  }
+
+  .sb-input {
+    flex: 1;
+    background: #1c1f28;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #f0f2f5;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    resize: none;
+  }
+
+  .sb-input:focus { border-color: rgba(79,255,176,0.3); }
+  .sb-input::placeholder { color: #7a8095; }
+
+  .sb-send {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #4fffb0;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+    align-self: flex-end;
+  }
+
+  .sb-send:hover { opacity: 0.85; }
+  .sb-send:disabled { opacity: 0.4; cursor: default; }
+
+  .sb-send svg { width: 16px; height: 16px; }
+
+  .sb-branding {
+    text-align: center;
+    padding: 6px;
+    font-size: 10px;
+    color: #3a3f50;
+    background: #111318;
+  }
+
+  .sb-branding a { color: #4fffb0; text-decoration: none; }
+
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">
+    <svg height="95" viewBox="0 0 560 280" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <style>
+          .robot-smile { fill: none; stroke: #0a0c10; stroke-width: 3; stroke-linecap: round; }
+          .logo-text-white { font-family: 'Syne', 'Arial Black', sans-serif; font-weight: 800; font-size: 42px; fill: #f0f2f5; letter-spacing: -1px; }
+          .logo-text-green { font-family: 'Syne', 'Arial Black', sans-serif; font-weight: 800; font-size: 42px; fill: #4fffb0; letter-spacing: -1px; }
+        </style>
+      </defs>
+      <ellipse cx="134" cy="152" rx="118" ry="108" fill="rgba(79,255,176,0.08)"/>
+      <path d="M134 248 L118 228 L90 228 Q82 228 82 220 L82 90 Q82 82 90 82 L178 82 Q186 82 186 90 L186 220 Q186 228 178 228 L150 228 Z" fill="#0a1a12" stroke="rgba(79,255,176,0.25)" stroke-width="1"/>
+      <line x1="134" y1="82" x2="134" y2="60" stroke="#4fffb0" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="134" cy="54" r="8" fill="#4fffb0"/>
+      <circle cx="134" cy="54" r="4" fill="#0a0c10" opacity="0.5"/>
+      <rect x="94" y="88" width="80" height="64" rx="18" fill="#1a3d2b"/>
+      <rect x="100" y="94" width="68" height="52" rx="14" fill="#0f2d1f"/>
+      <rect x="88" y="100" width="10" height="20" rx="5" fill="#1a3d2b"/>
+      <rect x="170" y="100" width="10" height="20" rx="5" fill="#1a3d2b"/>
+      <circle cx="116" cy="118" r="10" fill="#4fffb0"/>
+      <circle cx="152" cy="118" r="10" fill="#4fffb0"/>
+      <circle cx="118" cy="116" r="5" fill="#0a0c10"/>
+      <circle cx="154" cy="116" r="5" fill="#0a0c10"/>
+      <circle cx="120" cy="114" r="2" fill="#4fffb0"/>
+      <circle cx="156" cy="114" r="2" fill="#4fffb0"/>
+      <path d="M116 132 Q134 142 152 132" class="robot-smile"/>
+      <circle cx="112" cy="218" r="6" fill="#4fffb0"/>
+      <circle cx="130" cy="218" r="6" fill="#00c9ff"/>
+      <circle cx="148" cy="218" r="6" fill="rgba(79,255,176,0.4)"/>
+      <text y="162" x="220" class="logo-text-white">spjall<tspan class="logo-text-green">bot</tspan>.is</text>
+    </svg>
+  </a>
+  <a href="#" onclick="window.location.href='mailto:info@spjallbot.is';return false;" class="nav-cta">Fáðu tilboð</a>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="badge">Íslenskur AI spjallbot</div>
+    <h1>Láttu AI svara<br>fyrir þig – <em>alla daga,<br>allan sólarhringinn</em></h1>
+    <p class="hero-sub">Sérsniðinn spjallbot sem lærir á þitt fyrirtæki og svarar viðskiptavinum þínum strax – án þess að þú þurfir að lyfta fingri.</p>
+    <div class="hero-buttons">
+      <a href="#" onclick="window.location.href='mailto:info@spjallbot.is';return false;" class="btn-primary">→ Fáðu ókeypis ráðgjöf</a>
+      <a href="#features" class="btn-ghost">Sjá hvernig það virkar</a>
+    </div>
+  </div>
+
+
+  <div class="stats-row">
+    <div class="stat"><span class="stat-num">24/7</span><span class="stat-label">Alltaf í gangi</span></div>
+    <div class="stat"><span class="stat-num">Hröð</span><span class="stat-label">Uppsetning</span></div>
+    <div class="stat"><span class="stat-num">Engin</span><span class="stat-label">Binding</span></div>
+  </div>
+
+  <section id="features">
+    <span class="section-label">Hvað færðu?</span>
+    <h2>Hvað gerir spjallbot<br>fyrir þitt fyrirtæki?</h2>
+    <p class="section-intro">Við setjum upp, þjálfum og viðhöldum botinum þínu.</p>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon">🕐</div><h3>Aldrei upptekin</h3><p>Spjallbotið þitt svarar spurningum viðskiptavina þinna 24 tíma á sólarhring, alla daga ársins – á kvöldin, um helgar og á hátíðardögum þegar þú hvílist.</p></div>
+      <div class="feature-card"><div class="feature-icon">🧠</div><h3>Lærir á þitt fyrirtæki</h3><p>Við þjálfum botið með þínum upplýsingum – verðlista, opnunartíma, algengum spurningum og fleiru.</p></div>
+      <div class="feature-card"><div class="feature-icon">⚡</div><h3>Fljótur í gang</h3><p>Frá samþykki til virkrar uppsetningar á vefsíðu þinni – oft á innan við 48 klukkustundum.</p></div>
+      <div class="feature-card"><div class="feature-icon">🇮🇸</div><h3>Íslenska í fyrirrúmi</h3><p>Botið er þjálfað sérstaklega til að tala náttúrulega íslensku – ekki tölulegt þýðingarmál heldur raunverulegt samtal.</p></div>
+      <div class="feature-card"><div class="feature-icon">📈</div><h3>Sparar tíma og peninga</h3><p>Sparar tíma í þjónustu við viðskiptavini.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔧</div><h3>Vefsíðugerð að auki</h3><p>Þarftu líka nýja vefsíðu? Við tökum einnig að okkur vefsíðugerð – einn aðili, ein samskiptalína, auðveld samvinna.</p></div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <span class="section-label">Verðlag</span>
+    <h2>Einfalt verðlag,<br>engar leyndar gjaldtökur</h2>
+    <p class="section-intro">Kynningarverð í takmarkaðan tíma.</p>
+    <div class="pricing-wrapper">
+      <div class="price-card">
+        <p class="price-name">Uppsetning</p>
+        <div class="price-main"><span class="price-old">37.000</span><span class="price-new">24.900</span><span style="font-size:0.85rem;color:var(--muted)">kr.</span></div>
+        <p class="price-period">Ein greiðsla · m/VSK</p>
+        <ul class="price-features">
+          <li><span class="check">✓</span> Sérsniðin þjálfun</li>
+          <li><span class="check">✓</span> Uppsetning á vefsíðu</li>
+          <li><span class="check">✓</span> Prófun og gæðaeftirlit</li>
+          <li><span class="check">✓</span> Leiðbeiningar til þín</li>
+        </ul>
+        <a href="#" onclick="window.location.href='mailto:info@spjallbot.is';return false;" class="btn-ghost" style="display:block;text-align:center;padding:0.75rem;">Hafa samband</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-badge">🔥 Kynningarverð</div>
+        <p class="price-name">Mánaðargjald</p>
+        <div class="price-main"><span class="price-old">9.900</span><span class="price-new">6.900</span><span style="font-size:0.85rem;color:var(--muted)">kr.</span></div>
+        <p class="price-period">Á mánuði · m/VSK</p>
+        <ul class="price-features">
+          <li><span class="check">✓</span> Engin binding – hætta hvenær</li>
+          <li><span class="check">✓</span> Uppfærslur og viðhald</li>
+          <li><span class="check">✓</span> Þjónustuver ef eitthvað kemur upp</li>
+          <li><span class="check">✓</span> Bæta við efni hvenær sem er</li>
+        </ul>
+        <a href="#" onclick="window.location.href='mailto:info@spjallbot.is';return false;" class="btn-primary" style="display:block;text-align:center;padding:0.75rem;border-radius:50px;text-decoration:none;font-size:0.95rem;">→ Byrjaðu núna</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-section">
+    <div class="cta-glow"></div>
+    <span class="section-label">Tilbúinn?</span>
+    <h2>Byrjaðu að spara tíma<br>í dag</h2>
+    <p>Við gefum þér ókeypis ráðgjöf og skoðum saman hvort spjallbot henti þínu fyrirtæki – án skuldbindingar.</p>
+    <div class="cta-buttons">
+      <a href="#" onclick="window.location.href='mailto:info@spjallbot.is';return false;" class="btn-primary-lg">→ Fáðu ókeypis ráðgjöf</a>
+    </div>
+    <div class="trust-row">
+      <span class="trust-item"><span class="trust-dot"></span> Engin binding</span>
+      <span class="trust-item"><span class="trust-dot"></span> Svar innan 24 klst.</span>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p>&copy; 2026 Spjallbot.is &nbsp;·&nbsp; <a href="#" onclick="window.location.href='mailto:info@spjallbot.is';return false;"><span class="__cf_email__" data-cfemail="523b3c343d12212238333e3e303d267c3b21">[email&#160;protected]</span></a></p>
+</footer>
+
+<div id="spjallbot-bubble" onclick="toggleBot()">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C6.48 2 2 6.48 2 12C2 13.85 2.51 15.59 3.39 17.07L2 22L6.93 20.61C8.41 21.49 10.15 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" fill="#0a0c10"/>
+    <circle cx="8.5" cy="12" r="1.5" fill="#4fffb0"/>
+    <circle cx="12" cy="12" r="1.5" fill="#4fffb0"/>
+    <circle cx="15.5" cy="12" r="1.5" fill="#4fffb0"/>
+  </svg>
+</div>
+
+<div id="spjallbot-window">
+  <div class="sb-header">
+    <div class="sb-dot"></div>
+    <span class="sb-title">Spjallbot.is</span>
+    <span class="sb-close" onclick="toggleBot()">✕</span>
+  </div>
+  <div class="sb-messages" id="sb-messages"></div>
+  <div class="sb-input-area">
+    <textarea class="sb-input" id="sb-input" placeholder="Skrifaðu hér..." rows="1" onkeydown="handleKey(event)"></textarea>
+    <button class="sb-send" id="sb-send" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M22 2L11 13" stroke="#0a0c10" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#0a0c10" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+  <div class="sb-branding">Knúið af <a href="https://spjallbot.is" target="_blank">Spjallbot.is</a></div>
+</div>
+
+<script>
+
+const SYSTEM_PROMPT = `Þú ert þjónustufulltrúi hjá Spjallbot.is. Nafn þitt er Spjallbot.
+
+Um Spjallbot.is:
+Spjallbot.is býður upp á sérsniðna AI spjallbota fyrir íslenskar vefsíður. Botarnir eru þjálfaðir sérstaklega á hvert fyrirtæki og svara spurningum viðskiptavina allan sólarhringinn.
+
+Verðlag:
+- Uppsetning: 24.900 kr. með VSK (kynningarverð, venjulega 37.000 kr.)
+- Mánaðargjald: 6.900 kr. með VSK (kynningarverð, venjulega 9.900 kr.)
+- Engin binding - hætta hvenær sem er
+
+Hvað við bjóðum upp á:
+- Sérsniðinn spjallbot þjálfaður á þitt fyrirtæki
+- Svarar spurningum viðskiptavina 24/7 - allan sólarhringinn
+- Lærir á upplýsingar fyrirtækisins: verðlista, opnunartíma, algengar spurningar
+- Uppsetning á vefsíðu á innan við 48 klukkustundir
+- Engin tæknileg þekking þörf
+- Við sjáum um allt: uppsetningu, þjálfun og viðhald
+- Svarar á íslensku og ensku (og öðrum tungumálum eftir þörfum)
+- Við bjóðum einnig upp á vefsíðugerð
+
+Kostir fyrir fyrirtæki:
+- Sparar tíma - þarf ekki að svara sömu spurningum aftur og aftur
+- Viðskiptavinir fá svar strax, dag og nótt
+- Eykur sölumöguleika - botinn getur selt og kynnt þjónustu
+- Lækkar kostnað við þjónustuver
+
+Samband:
+- Tölvupóstur: info@spjallbot.is
+- Við svörum innan sólarhrings
+
+Leiðbeiningar:
+- Svaraðu ALLTAF á sama tungumáli og notandinn skrifar á
+- Vertu hlýr, hjálplegur og faglegur
+- Reyndu að kynna þjónustuna og fá fólk til að hafa samband
+- Ef einhver er áhugasamur, beindu þeim á info@spjallbot.is
+- Haltu svörum stuttum og skýrum`;
+
+let messages = [];
+let isOpen = false;
+
+function toggleBot() {
+  isOpen = !isOpen;
+  const win = document.getElementById('spjallbot-window');
+  if (isOpen) {
+    win.classList.add('open');
+    if (messages.length === 0) {
+      addMessage('bot', 'Hæ! 👋 Ég er spjallbot Spjallbot.is. Hvernig get ég hjálpað þér í dag?');
+    }
+  } else {
+    win.classList.remove('open');
+  }
+}
+
+function addMessage(role, text) {
+  const container = document.getElementById('sb-messages');
+  const div = document.createElement('div');
+  div.className = role === 'bot' ? 'sb-msg sb-msg-bot' : 'sb-msg sb-msg-user';
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function showTyping() {
+  const container = document.getElementById('sb-messages');
+  const div = document.createElement('div');
+  div.className = 'sb-typing';
+  div.id = 'sb-typing';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('sb-typing');
+  if (el) el.remove();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('sb-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  addMessage('user', text);
+
+  messages.push({ role: 'user', content: text });
+
+  const sendBtn = document.getElementById('sb-send');
+  sendBtn.disabled = true;
+  showTyping();
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: messages })
+    });
+
+    const data = await response.json();
+    hideTyping();
+
+    const reply = data.content[0].text;
+    messages.push({ role: 'assistant', content: reply });
+    addMessage('bot', reply);
+
+  } catch (err) {
+    hideTyping();
+  
