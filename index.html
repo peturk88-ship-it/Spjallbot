@@ -555,4 +555,13 @@ async function sendMessage() {
 
   } catch (err) {
     hideTyping();
-  
+      addMessage('bot', 'Úps, eitthvað fór úrskeiðis. Vinsamlegast reyndu aftur! 🙏');
+  }
+
+  sendBtn.disabled = false;
+  document.getElementById('sb-input').focus();
+}
+</script>
+
+</body>
+</html>
