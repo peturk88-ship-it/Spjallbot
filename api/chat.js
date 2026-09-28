@@ -20,7 +20,7 @@ Um Spjallbot.is:
 Spjallbot.is býður upp á sérsniðna AI spjallbota fyrir íslenskar vefsíður. Botarnir eru þjálfaðir sérstaklega á hvert fyrirtæki og svara spurningum viðskiptavina allan sólarhringinn.
 
 Verðlag:
-- Grunnpakki (heimasíða + spjallbot): 7.000 kr. uppsetning ef fyrirtækið á lén fyrir, 17.000 kr. með nýju .is léni
+- Grunnpakki (heimasíða + spjallbot): 6.990 kr. uppsetning ef fyrirtækið á lén fyrir, 16.990 kr. með nýju .is léni
 - Mánaðargjald: 1.990 kr./mán - lén og allt að 250 samtöl við spjallbot á mánuði innifalið
 - Engin binding - hætta hvenær sem er
 
